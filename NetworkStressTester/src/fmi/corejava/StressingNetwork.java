@@ -14,12 +14,12 @@ public class StressingNetwork implements Runnable {
 	public static AtomicBoolean isBroken = new AtomicBoolean(false);
 	private static AtomicLong maxTimeForResponse = new AtomicLong(0L);
 	
-	public StressingNetwork(RequestSending requestInfo, CyclicBarrier bar) {
+	public StressingNetwork(RequestSending requestSending, CyclicBarrier bar) {
 		this.requestSending = requestSending;
 		this.bar = bar;
 	}
 	
-	public void sendingRequest() {
+	public void sendingRequest() throws UnexpectedResponse, IOException {
 		
 		Long startTime = System.currentTimeMillis();
 		requestSending.sendingRequest();
@@ -40,7 +40,15 @@ public class StressingNetwork implements Runnable {
 		// TODO Auto-generated method stub
 		try {
 			bar.await();
-			this.sendingRequest();
+			try {
+				this.sendingRequest();
+			} catch (UnexpectedResponse | IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("The request could not be sent.");
+				System.out.println(e.getMessage());
+				isBroken.compareAndSet(false, true);
+				e.printStackTrace();
+			}
 		}
 		catch (BrokenBarrierException | InterruptedException e) {
 				e.printStackTrace();
